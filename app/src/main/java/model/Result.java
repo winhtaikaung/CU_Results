@@ -117,7 +117,7 @@ public class Result extends RealmObject {
      */
     @JsonProperty("major")
     public String getMajor() {
-        if(major==null || major=="null") {
+        if(major==null ) {
             String major="";
             return major;
         }else{

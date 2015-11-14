@@ -104,11 +104,14 @@ public class ResultRealmHelper {
         return Partylist;
     }
 
-    public Result getStudentByRollnumber(String ID) {
+    public Result getStudentByRollnumber(String ID,String year,String major,String external) {
         Result result = new Result();
 
         try {
-            result = mRealm.where(Result.class).equalTo("roll_no", ID).findFirst();
+            result = mRealm.where(Result.class).equalTo("rollNo", ID)
+                    .equalTo("year", year)
+                    .equalTo("major", major)
+                    .equalTo("external", external).findFirst();
         } catch (RealmException re) {
             re.printStackTrace();
         }

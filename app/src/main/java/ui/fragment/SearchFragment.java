@@ -4,12 +4,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.AppCompatCheckBox;
 import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,20 +46,36 @@ public class SearchFragment extends Fragment {
     AppCompatSpinner spinner_CT_CS;
     AppCompatSpinner  spinner_year;
     MaterialDialog progress_dialog;
+    AppCompatCheckBox is_external;
     TextView btn_search;
     Toolbar mToolbar;
+
+
+    String external="0";
+    String year="-1";
+    String major="-1";
+    String roll_no="";
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v=inflater.inflate(R.layout.fragment_search,container,false);
 
         mToolbar=(Toolbar)v.findViewById(R.id.toolbar);
+        mToolbar.inflateMenu(R.menu.main_menu);
+
+        if(ResultRealmHelper.getInstance(getContext()).getTownShipList().size()==0){
+            new AsyncdataBindResults().execute();
+        }
 
         edit_rollnumber=(MaterialEditText)v.findViewById(R.id.edit_rollnumber);
-        edit_rollnumber.addValidator(new RequiredValidator(""))
+        edit_rollnumber.addValidator(new RequiredValidator(getActivity().getResources().getString(R.string.string_required_validator)));
         spinner_CT_CS=(AppCompatSpinner)v.findViewById(R.id.spinner_CT_CS);
         spinner_year=(AppCompatSpinner) v.findViewById(R.id.spinner_year);
+        is_external=(AppCompatCheckBox) v.findViewById(R.id.is_external);
         btn_search=(TextView) v.findViewById(R.id.btn_search);
+
+
         mToolbar.setTitle(getActivity().getResources().getString(R.string.app_name));
         List<String> lst_year= Arrays.asList(getActivity().getResources().getStringArray(R.array.arr_years));
         List<String> lst_specialication= Arrays.asList(getActivity().getResources().getStringArray(R.array.arr_CT_CS));
@@ -65,19 +84,112 @@ public class SearchFragment extends Fragment {
 
         spinner_CT_CS.setAdapter(ct_cu_spinner_adapter);
         spinner_year.setAdapter(year_spinner_adapter);
+        spinner_CT_CS.setSelection(0);
+        spinner_year.setSelection(0);
+        is_external.setChecked(false);
+
+        spinner_CT_CS.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                major = spinner_CT_CS.getAdapter().getItem(i).toString().toLowerCase();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        spinner_year.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if(i==0){
+                    spinner_CT_CS.setSelection(0);
+                }
+                year=String.valueOf(i+1);
+                Toast.makeText(getActivity(),year,Toast.LENGTH_LONG).show();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        is_external.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){
+                    external="1";
+                }else{
+                    external="0";
+                }
+            }
+        });
+
+
         MaterialDialog.Builder builder = new MaterialDialog.Builder(getActivity())
                 .title("Loading...")
                 .autoDismiss(false)
                 .customView(R.layout.loading, false);
 
+
+
         progress_dialog=builder.build();
 
-        if(ResultRealmHelper.getInstance(getContext()).getTownShipList().size()==0){
-            new AsyncdataBindResults().execute();
-        }
+        btn_search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean valid = edit_rollnumber.validate() ;
+
+
+                if(valid){
+
+
+                    if(year=="-1"){
+                        new MaterialDialog.Builder(getActivity())
+                                .content("Please Select Year")
+                                .positiveText("OK")
+
+                                .show();
+
+                    }
+
+                    if(major=="-1"){
+                        new MaterialDialog.Builder(getActivity())
+                                .content("Please Select Major")
+                                .positiveText("OK")
+
+                                .show();
+
+                    }
+
+                    SearchResults(edit_rollnumber.getText().toString(),year,major,external);
+                }
+
+                //Log.e("TOTAL_VALUES",major+","+year+","+external+"");
+            }
+        });
+
+
 
         return v;
     }
+
+
+
+    Result SearchResults(String RollNumber,String year,String major,String external){
+        if(major=="none"){
+            major="null";
+        }
+        Log.e("TOTAL_VALUES",major+","+year+","+external+""+RollNumber);
+       Result r= ResultRealmHelper.getInstance(getContext()).getStudentByRollnumber(RollNumber,year,major,external);
+
+        return r;
+    }
+
+
 
     class AsyncdataBindResults extends AsyncTask<String, String, List<Result>> {
         @Override
@@ -131,7 +243,7 @@ public class SearchFragment extends Fragment {
 
                         i++;
                         Log.w("TOTAL_COUNT", String.valueOf(i));
-                        progress_dialog.setTitle("Loading"+i+"of"+String.valueOf(listArry.length()));
+
                     }
 
                     Log.w("parsing completed", "COmpleted!");
@@ -147,9 +259,9 @@ public class SearchFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<Result> s) {
-
+            progress_dialog.setTitle("Completed");
             progress_dialog.dismiss();
-            Toast.makeText(getActivity(),getActivity().getString(R.string.creating_db_complete),Toast.LENGTH_LONG).show();
+
             //GeoTownshipRealmHelper.getInstance(getApplicationContext()).UpsertTownship(township);
             //Dismiss Progress and start activity
         }

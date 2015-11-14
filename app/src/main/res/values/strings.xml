@@ -1,15 +1,16 @@
 <resources>
     <string name="app_name">CU Results</string>
-    <string name="string_roll_number">Roll Number(ခံုနံပါတ္)</string>
+    <string name="string_roll_number">Roll Number Eng လိုရိုက္ရမွာေနာ္</string>
     <string name="string_choose_cs_ct">CS လား CT လား</string>
     <string name="string_choose_year">ဘယ္ year လဲ။</string>
-    <string name="string_required_validator"></string>
+    <string name="string_required_validator">ဘာလား ဘာမွမပါဘဲနဲ႔ ရွာလို႔ရဘူးေလ </string>
 
     <string name="creating_db">Downloading..</string>
     <string name="creating_db_complete">Downloading Completed</string>
 
 
     <string-array name="arr_CT_CS">
+        <item>None</item>
         <item>CS</item>
         <item>CT</item>
     </string-array>
