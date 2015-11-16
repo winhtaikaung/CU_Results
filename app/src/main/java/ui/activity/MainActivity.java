@@ -3,8 +3,11 @@ package ui.activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.curesults.R;
+
 
 import ui.fragment.SearchFragment;
 
@@ -13,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             Intent intent = getIntent();
@@ -22,5 +26,8 @@ public class MainActivity extends AppCompatActivity {
                         .commit();
 
         }
+
     }
+
+
 }

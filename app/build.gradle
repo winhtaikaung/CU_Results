@@ -42,4 +42,5 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.1'
     compile project(':libraryMaterialDialogs')
+    compile project(':libraryMaterialishProgress')
 }

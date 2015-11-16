@@ -1,5 +1,6 @@
 package ui.fragment;
 
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,8 +10,10 @@ import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.TextView;
@@ -50,6 +53,11 @@ public class SearchFragment extends Fragment {
     TextView btn_search;
     Toolbar mToolbar;
 
+    WebView webcontainer;
+
+    //Dialog text views
+    TextView tv_rollno,tv_student_name,tv_major,tv_year;
+
 
     String external="0";
     String year="-1";
@@ -64,9 +72,9 @@ public class SearchFragment extends Fragment {
         mToolbar=(Toolbar)v.findViewById(R.id.toolbar);
         mToolbar.inflateMenu(R.menu.main_menu);
 
-        if(ResultRealmHelper.getInstance(getContext()).getTownShipList().size()==0){
-            new AsyncdataBindResults().execute();
-        }
+        mToolbar.setOnMenuItemClickListener(new ToolbarMenuItemclickListener());
+
+
 
         edit_rollnumber=(MaterialEditText)v.findViewById(R.id.edit_rollnumber);
         edit_rollnumber.addValidator(new RequiredValidator(getActivity().getResources().getString(R.string.string_required_validator)));
@@ -91,7 +99,12 @@ public class SearchFragment extends Fragment {
         spinner_CT_CS.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
                 major = spinner_CT_CS.getAdapter().getItem(i).toString().toLowerCase();
+                if (major.equals("none")) {
+                    major="null";
+                }
+
             }
 
             @Override
@@ -103,11 +116,11 @@ public class SearchFragment extends Fragment {
         spinner_year.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if(i==0){
+                if (i == 0) {
                     spinner_CT_CS.setSelection(0);
                 }
-                year=String.valueOf(i+1);
-                Toast.makeText(getActivity(),year,Toast.LENGTH_LONG).show();
+                year = String.valueOf(i + 1);
+
 
             }
 
@@ -120,10 +133,10 @@ public class SearchFragment extends Fragment {
         is_external.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
-                    external="1";
-                }else{
-                    external="0";
+                if (b) {
+                    external = "1";
+                } else {
+                    external = "0";
                 }
             }
         });
@@ -131,6 +144,7 @@ public class SearchFragment extends Fragment {
 
         MaterialDialog.Builder builder = new MaterialDialog.Builder(getActivity())
                 .title("Loading...")
+                .customView(R.layout.loading,false)
                 .autoDismiss(false)
                 .customView(R.layout.loading, false);
 
@@ -138,11 +152,23 @@ public class SearchFragment extends Fragment {
 
         progress_dialog=builder.build();
 
+         if(ResultRealmHelper.getInstance(getContext()).getTownShipList().size()==0){
+             new AsyncdataBindResults().execute();
+         }
+
+
+
         btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 boolean valid = edit_rollnumber.validate() ;
 
+                final MaterialDialog pass_dialog = new MaterialDialog.Builder(getActivity())
+                        .title(R.string.string_congratulations)
+                        .customView(R.layout.dialog_layout, true)
+                        .positiveText("OK")
+
+                        .build();
 
                 if(valid){
 
@@ -165,7 +191,32 @@ public class SearchFragment extends Fragment {
 
                     }
 
-                    SearchResults(edit_rollnumber.getText().toString(),year,major,external);
+                  final  Result r=SearchResults(edit_rollnumber.getText().toString(),year,major,external);
+                    if(r==null){
+                        new MaterialDialog.Builder(getActivity())
+                                .title(R.string.string_Sorry)
+                                .content(R.string.string_Sorry_detail)
+                                .positiveText("OK")
+                                .show();
+                    }else{
+                        pass_dialog.show();
+                        pass_dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                            @Override
+                            public void onShow(DialogInterface dialogInterface) {
+                                tv_major=(TextView) pass_dialog.findViewById(R.id.tv_major);
+                                tv_rollno=(TextView) pass_dialog.findViewById(R.id.tv_rollno);
+                                tv_student_name=(TextView) pass_dialog.findViewById(R.id.tv_student_name);
+                                tv_year=(TextView) pass_dialog.findViewById(R.id.tv_year);
+
+
+
+                                tv_year.setText(yeargenerator(r.getYear().toString()));
+                                tv_student_name.setText(r.getName().equals("null")?"none":r.getName().toString());
+                                tv_rollno.setText(r.getRollNo().toString());
+                                tv_major.setText(r.getMajor().toString());
+                            }
+                        });
+                    }
                 }
 
                 //Log.e("TOTAL_VALUES",major+","+year+","+external+"");
@@ -177,16 +228,73 @@ public class SearchFragment extends Fragment {
         return v;
     }
 
+    String yeargenerator(String year){
+        String mod_year="";
+        switch (year){
+            case "1":
+                mod_year= "1st";
+                break;
+            case "2":
+                mod_year= "2nd";
+                break;
+            case "3":
+                mod_year= "3rd";
+                break;
+            case "4":
+                mod_year="4th";
+                break;
+            case "5":
+                mod_year="5th";
+                break;
+            default:
+                mod_year="invalid data";
+            break;
+
+        }
+        return mod_year;
+    }
+
 
 
     Result SearchResults(String RollNumber,String year,String major,String external){
-        if(major=="none"){
+        if(major.equals("none")){
             major="null";
         }
-        Log.e("TOTAL_VALUES",major+","+year+","+external+""+RollNumber);
+        Log.e("TOTAL_VALUES", major + "," + year + "," + external + "" + RollNumber);
        Result r= ResultRealmHelper.getInstance(getContext()).getStudentByRollnumber(RollNumber,year,major,external);
 
         return r;
+    }
+
+    protected class ToolbarMenuItemclickListener implements Toolbar.OnMenuItemClickListener{
+
+        @Override
+        public boolean onMenuItemClick(MenuItem item) {
+            final MaterialDialog menu_dialog = new MaterialDialog.Builder(getActivity())
+                    .title(item.getTitle())
+                    .customView(R.layout.menu_dialog, true)
+                    .positiveText("OK")
+
+                    .build();
+            webcontainer=(WebView) menu_dialog.findViewById(R.id.web_container);
+            switch (item.getItemId()){
+                case R.id.action_about:
+                    webcontainer.getSettings().setJavaScriptEnabled(true);
+                    webcontainer.loadUrl("file:///android_asset/html/about.html");
+                    menu_dialog.show();
+                    break;
+                case R.id.opensource_license:
+                    webcontainer.getSettings().setJavaScriptEnabled(true);
+                    webcontainer.loadUrl("file:///android_asset/html/license.html");
+                    menu_dialog.show();
+                    break;
+
+
+
+            }
+            return true;
+
+        }
     }
 
 
@@ -195,7 +303,7 @@ public class SearchFragment extends Fragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            Toast.makeText(getActivity(), getActivity().getString(R.string.creating_db), Toast.LENGTH_LONG).show();
+            //Toast.makeText(getActivity(), getActivity().getString(R.string.creating_db), Toast.LENGTH_LONG).show();
             progress_dialog.show();
 
 

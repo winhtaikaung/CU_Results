@@ -92,10 +92,10 @@
         android:layout_marginLeft="@dimen/standard_margin"
         android:layout_marginRight="@dimen/standard_margin"
         android:paddingTop="15dp"
-        android:paddingBottom="10dp"
+        android:paddingBottom="15dp"
         style="@style/QUESTION_TEXTVIEW"
 
-        android:layout_height="50dp" />
+        android:layout_height="55dp" />
 
 
     <!--app:fontPath="fonts/Roboto-Light.ttf"-->

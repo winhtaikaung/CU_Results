@@ -1,1 +1,1 @@
-include ':app', ':libraryMaterialEditText', ':libraryMaterialDialogs', ':libraryMaterialishProgress'
+include ':app', ':libraryMaterialEditText', ':libraryMaterialDialogs', ':libraryMaterialishProgress', ':mmtext'
